@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1E2A38">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<title>Реестр клиентов</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --ink:#1E2A38;
+    --ink-soft:#3E4A58;
+    --muted:#6B7480;
+    --bg:#EFEDE5;
+    --surface:#FFFFFF;
+    --divider:#DDD8CB;
+    --buy:#2F6F4F;
+    --buy-bg:#E7F0EA;
+    --sell:#A05F27;
+    --sell-bg:#F3E9DC;
+    --aware:#5B6B7C;
+    --aware-bg:#E7EBEF;
+    --primary:#1F4E63;
+    --primary-ink:#FFFFFF;
+    --danger:#AE4530;
+    --radius:10px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overscroll-behavior-y:none;
+  }
+  h1,h2,h3{font-family:'PT Serif',Georgia,serif; margin:0; font-weight:700;}
+  button{font-family:inherit;}
+  input,select,textarea{font-family:inherit; font-size:16px;}
+
+  #app{
+    max-width:520px;
+    margin:0 auto;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    background:var(--bg);
+  }
+
+  /* ---------- HEADER ---------- */
+  header.top{
+    padding:calc(18px + var(--safe-top)) 20px 14px;
+    background:var(--ink);
+    color:#EFEDE5;
+  }
+  header.top .eyebrow{
+    font-size:13px;
+    color:#B7C2CC;
+    margin-bottom:4px;
+  }
+  header.top h1{
+    font-size:26px;
+    color:#fff;
+  }
+  .mode-switch{
+    display:flex; gap:6px; margin-top:12px;
+  }
+  .mode-btn{
+    flex:0 0 auto;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.25);
+    color:#D7DEE3;
+    font-size:12.5px;
+    font-weight:600;
+    padding:6px 14px;
+    border-radius:20px;
+    cursor:pointer;
+  }
+  .mode-btn.active{
+    background:#EFEDE5;
+    color:var(--ink);
+    border-color:#EFEDE5;
+  }
+
+  /* ---------- SCREENS ---------- */
+  .screen{ display:none; flex:1; flex-direction:column; min-height:0; }
+  .screen.active{ display:flex; }
+
+  /* ---------- LIST SCREEN ---------- */
+  .toolbar{
+    padding:14px 16px 10px;
+    background:var(--bg);
+    position:sticky; top:0; z-index:5;
+  }
+  .search-row{
+    display:flex; gap:8px;
+    background:var(--surface);
+    border:1px solid var(--divider);
+    border-radius:var(--radius);
+    padding:10px 12px;
+    align-items:center;
+  }
+  .search-row input{
+    border:none; outline:none; background:transparent; width:100%;
+    color:var(--ink); font-size:15px;
+  }
+  .search-row input::placeholder{ color:var(--muted); }
+
+  .filters{
+    display:flex; gap:8px; margin-top:10px;
+    overflow-x:auto; -webkit-overflow-scrolling:touch;
+    padding-bottom:2px;
+  }
+  .filter-pill{
+    flex:0 0 auto;
+    text-align:center;
+    padding:8px 14px;
+    border-radius:var(--radius);
+    border:1px solid var(--divider);
+    background:var(--surface);
+    color:var(--ink-soft);
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .filter-pill.active{
+    background:var(--ink);
+    border-color:var(--ink);
+    color:#fff;
+  }
+
+  .list-scroll{
+    flex:1;
+    overflow-y:auto;
+    padding:4px 16px calc(90px + var(--safe-bottom));
+  }
+
+  .empty-state{
+    text-align:center;
+    color:var(--muted);
+    padding:60px 20px;
+    font-size:14.5px;
+    line-height:1.6;
+  }
+  .empty-state h3{ color:var(--ink-soft); font-size:18px; margin-bottom:8px; }
+
+  .client-row{
+    background:var(--surface);
+    border-radius:var(--radius);
+    border:1px solid var(--divider);
+    border-left-width:4px;
+    padding:13px 14px;
+    margin-top:10px;
+    cursor:pointer;
+  }
+  .client-row.buy{ border-left-color:var(--buy); }
+  .client-row.sell{ border-left-color:var(--sell); }
+  .client-row.aware{ border-left-color:var(--aware); }
+
+  .client-row .row-top{
+    display:flex; justify-content:space-between; align-items:baseline; gap:8px;
+  }
+  .client-row .name{ font-weight:600; font-size:16px; color:var(--ink); }
+  .client-row .deal-tag{
+    font-size:12px; font-weight:600; white-space:nowrap;
+    padding:2px 8px; border-radius:20px;
+  }
+  .client-row.buy .deal-tag{ color:var(--buy); background:var(--buy-bg); }
+  .client-row.sell .deal-tag{ color:var(--sell); background:var(--sell-bg); }
+  .client-row.aware .deal-tag{ color:var(--aware); background:var(--aware-bg); }
+
+  .client-row .meta{
+    margin-top:5px; font-size:13.5px; color:var(--muted); line-height:1.5;
+  }
+  .client-row .meta b{ color:var(--ink-soft); font-weight:600; }
+
+  .client-row .row-bottom{
+    margin-top:7px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .status-chip{
+    font-size:12.5px; color:var(--ink-soft); font-weight:500;
+  }
+  .next-contact{
+    font-size:12.5px; font-weight:600;
+  }
+  .next-contact.due{ color:var(--danger); }
+  .next-contact.upcoming{ color:var(--primary); }
+
+  /* ---------- BOTTOM NAV ---------- */
+  nav.bottom{
+    position:sticky; bottom:0;
+    display:flex;
+    background:var(--surface);
+    border-top:1px solid var(--divider);
+    padding:8px 10px calc(8px + var(--safe-bottom));
+    z-index:10;
+  }
+  nav.bottom button{
+    flex:1;
+    background:none; border:none;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    padding:6px 4px;
+    color:var(--muted);
+    font-size:11.5px;
+    font-weight:600;
+    border-radius:8px;
+  }
+  nav.bottom button.active{ color:var(--primary); }
+  nav.bottom button .dot{
+    width:20px; height:20px;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* ---------- FORM SCREEN ---------- */
+  .form-header{
+    padding:calc(16px + var(--safe-top)) 16px 14px;
+    background:var(--surface);
+    border-bottom:1px solid var(--divider);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .form-header h2{ font-size:19px; }
+  .link-btn{
+    background:none; border:none; color:var(--primary);
+    font-size:15px; font-weight:600; padding:4px 2px;
+  }
+  .link-btn.danger{ color:var(--danger); }
+
+  .form-scroll{
+    flex:1; overflow-y:auto; padding:16px 16px calc(30px + var(--safe-bottom));
+  }
+  .field{ margin-bottom:16px; }
+  .field label{
+    display:block; font-size:12.5px; font-weight:600;
+    color:var(--muted); margin-bottom:6px;
+  }
+  .field input, .field select, .field textarea{
+    width:100%;
+    border:1px solid var(--divider);
+    background:var(--surface);
+    border-radius:8px;
+    padding:11px 12px;
+    color:var(--ink);
+  }
+  .field textarea{ min-height:80px; resize:vertical; }
+  .toggle-row{ display:flex; gap:8px; }
+  .toggle-opt{
+    flex:1;
+    text-align:center;
+    padding:10px 6px;
+    border-radius:8px;
+    border:1px solid var(--divider);
+    color:var(--ink-soft);
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .toggle-opt.selected.buy{ background:var(--buy-bg); border-color:var(--buy); color:var(--buy); }
+  .toggle-opt.selected.sell{ background:var(--sell-bg); border-color:var(--sell); color:var(--sell); }
+  .toggle-opt.selected.aware{ background:var(--aware-bg); border-color:var(--aware); color:var(--aware); }
+  .toggle-opt.selected.plain{ background:var(--ink); border-color:var(--ink); color:#fff; }
+
+  .save-bar{
+    padding:12px 16px calc(12px + var(--safe-bottom));
+    background:var(--surface);
+    border-top:1px solid var(--divider);
+  }
+  .btn-primary{
+    width:100%;
+    background:var(--primary);
+    color:var(--primary-ink);
+    border:none;
+    padding:14px;
+    border-radius:10px;
+    font-size:16px;
+    font-weight:600;
+  }
+  .btn-primary:active{ opacity:.85; }
+
+  /* ---------- REPORT SCREEN ---------- */
+  .report-scroll{
+    flex:1; overflow-y:auto; padding:16px 16px calc(90px + var(--safe-bottom));
+  }
+  .stat-block{
+    background:var(--surface);
+    border:1px solid var(--divider);
+    border-radius:var(--radius);
+    padding:14px 16px;
+    margin-bottom:12px;
+  }
+  .stat-block h3{ font-size:15px; margin-bottom:10px; color:var(--ink-soft); }
+  .stat-line{
+    display:flex; justify-content:space-between;
+    padding:6px 0;
+    border-bottom:1px solid var(--divider);
+    font-size:14px;
+  }
+  .stat-line:last-child{ border-bottom:none; }
+  .stat-line span:last-child{ font-weight:700; color:var(--ink); }
+
+  .due-item{
+    padding:10px 0;
+    border-bottom:1px solid var(--divider);
+    font-size:13.5px;
+  }
+  .due-item:last-child{ border-bottom:none; }
+  .due-item .name{ font-weight:600; color:var(--ink); }
+  .due-item .when{ color:var(--danger); font-weight:600; }
+
+  .toast{
+    position:fixed; left:50%; bottom:100px; transform:translateX(-50%);
+    background:var(--ink); color:#fff; padding:10px 16px;
+    border-radius:20px; font-size:13.5px; z-index:50;
+    opacity:0; pointer-events:none; transition:opacity .25s;
+  }
+  .toast.show{ opacity:1; }
+
+  /* ---------- РАСШИРЕННАЯ ВЕРСИЯ (переключатель «Комп») ---------- */
+  body.desktop-layout{ background:#E3E0D5; }
+  body.desktop-layout #app{
+    max-width:960px;
+    box-shadow:0 0 50px rgba(0,0,0,.08);
+  }
+  body.desktop-layout .toolbar,
+  body.desktop-layout .list-scroll,
+  body.desktop-layout .report-scroll,
+  body.desktop-layout .form-scroll{
+    padding-left:30px; padding-right:30px;
+  }
+  body.desktop-layout .filters{ overflow-x:visible; }
+  body.desktop-layout .filter-pill{ flex:0 0 auto; padding:8px 18px; }
+
+  body.desktop-layout nav.bottom{
+    order:-1;
+    position:static;
+    border-top:none;
+    border-bottom:1px solid var(--divider);
+    padding:10px 22px;
+    justify-content:flex-start;
+  }
+  body.desktop-layout nav.bottom button{
+    flex:0 0 auto;
+    flex-direction:row;
+    gap:7px;
+    padding:9px 16px;
+    font-size:13.5px;
+    border-radius:8px;
+  }
+  body.desktop-layout nav.bottom button.active{ background:var(--bg); }
+
+  body.desktop-layout .client-row{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    padding:12px 20px;
+  }
+  body.desktop-layout .client-row .row-top{
+    flex:0 0 230px;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:5px;
+  }
+  body.desktop-layout .client-row .meta{ flex:1; margin-top:0; }
+  body.desktop-layout .client-row .row-bottom{
+    flex:0 0 210px;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:5px;
+    margin-top:0;
+  }
+
+  body.desktop-layout .form-scroll{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:0 20px;
+    align-content:start;
+  }
+  body.desktop-layout .field-wide{ grid-column:1 / -1; }
+
+  body.desktop-layout .report-scroll{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    align-content:start;
+  }
+  body.desktop-layout .stat-block{ margin-bottom:0; }
+  body.desktop-layout .wide-block{ grid-column:1 / -1; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header class="top">
+    <div class="eyebrow" id="todayLabel">Реестр клиентов</div>
+    <h1 id="greeting">Клиенты по недвижимости</h1>
+    <div class="mode-switch" id="modeSwitch">
+      <button class="mode-btn" data-mode="phone">Телефон</button>
+      <button class="mode-btn" data-mode="desktop">Комп</button>
+    </div>
+  </header>
+
+  <!-- ===== ЭКРАН: СПИСОК ===== -->
+  <section class="screen active" id="screen-list">
+    <div class="toolbar">
+      <div class="search-row">
+        <input type="text" id="searchInput" placeholder="Поиск по имени, телефону, объекту">
+      </div>
+      <div class="filters">
+        <div class="filter-pill active" data-filter="all">Все</div>
+        <div class="filter-pill" data-filter="Покупка">Покупка</div>
+        <div class="filter-pill" data-filter="Продажа">Продажа</div>
+        <div class="filter-pill" data-filter="На будущее">На будущее</div>
+      </div>
+    </div>
+    <div class="list-scroll" id="listScroll"></div>
+  </section>
+
+  <!-- ===== ЭКРАН: ФОРМА ===== -->
+  <section class="screen" id="screen-form">
+    <div class="form-header">
+      <button class="link-btn" id="cancelBtn">Отмена</button>
+      <h2 id="formTitle">Новый клиент</h2>
+      <button class="link-btn danger" id="deleteBtn" style="visibility:hidden;">Удалить</button>
+    </div>
+    <div class="form-scroll">
+      <div class="field">
+        <label>Имя клиента</label>
+        <input type="text" id="f-name" placeholder="Например, Андрей Петров">
+      </div>
+      <div class="field">
+        <label>Телефон</label>
+        <input type="tel" id="f-phone" placeholder="+7 900 000-00-00">
+      </div>
+      <div class="field field-wide">
+        <label>Тип сделки</label>
+        <div class="toggle-row" id="f-dealType">
+          <div class="toggle-opt buy" data-value="Покупка">Покупка</div>
+          <div class="toggle-opt sell" data-value="Продажа">Продажа</div>
+          <div class="toggle-opt aware" data-value="На будущее">На будущее</div>
+        </div>
+      </div>
+      <div class="field field-wide">
+        <label>Сегмент рынка</label>
+        <div class="toggle-row" id="f-segment">
+          <div class="toggle-opt plain" data-value="Первичка">Первичка</div>
+          <div class="toggle-opt plain" data-value="Вторичка">Вторичка</div>
+          <div class="toggle-opt plain" data-value="Не определено">Пока не ясно</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Бюджет</label>
+        <input type="text" id="f-budget" placeholder="Например, 6-7 млн ₽">
+      </div>
+      <div class="field">
+        <label>Объект / район / ЖК</label>
+        <input type="text" id="f-object" placeholder="Например, 2-к, Университетский">
+      </div>
+      <div class="field">
+        <label>Статус</label>
+        <select id="f-status">
+          <option>Осведомлён, не готов</option>
+          <option>Готов рассмотреть</option>
+          <option>Новый</option>
+          <option>В работе</option>
+          <option>Просмотр объектов</option>
+          <option>Задаток / аванс</option>
+          <option>Сделка закрыта</option>
+          <option>Отказ</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Следующий контакт</label>
+        <input type="date" id="f-next">
+      </div>
+      <div class="field field-wide">
+        <label>Заметки</label>
+        <textarea id="f-notes" placeholder="Детали, договорённости, возражения..."></textarea>
+      </div>
+    </div>
+    <div class="save-bar">
+      <button class="btn-primary" id="saveBtn">Сохранить</button>
+    </div>
+  </section>
+
+  <!-- ===== ЭКРАН: ОТЧЁТ ===== -->
+  <section class="screen" id="screen-report">
+    <div class="report-scroll" id="reportScroll"></div>
+    <div class="save-bar">
+      <button class="btn-primary" id="exportBtn">Скачать базу (Excel/CSV)</button>
+    </div>
+  </section>
+
+  <!-- ===== НИЖНЯЯ НАВИГАЦИЯ ===== -->
+  <nav class="bottom">
+    <button class="nav-btn active" data-tab="list">
+      <span class="dot">☰</span>Клиенты
+    </button>
+    <button class="nav-btn" data-tab="new">
+      <span class="dot">＋</span>Новый
+    </button>
+    <button class="nav-btn" data-tab="report">
+      <span class="dot">▤</span>Отчёт
+    </button>
+  </nav>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  var clients = [];
+  var editingId = null;
+  var currentFilter = 'all';
+  var currentSearch = '';
+
+  var STATUS_OPTIONS = ['Осведомлён, не готов','Готов рассмотреть','Новый','В работе','Просмотр объектов','Задаток / аванс','Сделка закрыта','Отказ'];
+
+  // ---------- STORAGE ----------
+  // Работает и внутри Claude (window.storage), и как самостоятельный сайт
+  // (например, после публикации на GitHub Pages) — тогда данные сохраняются
+  // в localStorage конкретного браузера на конкретном устройстве.
+  var LS_KEY = 'reestr_clients_v1';
+  var hasCloudStorage = !!window.storage;
+
+  function loadClients(){
+    if(hasCloudStorage){
+      window.storage.get('clients', false).then(function(res){
+        try{ clients = res && res.value ? JSON.parse(res.value) : []; }
+        catch(e){ clients = []; }
+        renderList();
+      }).catch(function(){
+        clients = [];
+        renderList();
+      });
+    } else {
+      try{
+        var raw = localStorage.getItem(LS_KEY);
+        clients = raw ? JSON.parse(raw) : [];
+      }catch(e){ clients = []; }
+      renderList();
+    }
+  }
+
+  function saveClients(){
+    if(hasCloudStorage){
+      return window.storage.set('clients', JSON.stringify(clients), false).then(function(res){
+        if(!res){ showToast('Не удалось сохранить изменения'); return false; }
+        return true;
+      }).catch(function(){
+        showToast('Не удалось сохранить изменения');
+        return false;
+      });
+    }
+    try{
+      localStorage.setItem(LS_KEY, JSON.stringify(clients));
+      return Promise.resolve(true);
+    }catch(e){
+      showToast('Не удалось сохранить: память браузера переполнена или недоступна');
+      return Promise.resolve(false);
+    }
+  }
+
+  function showToast(msg){
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 2200);
+  }
+
+  // ---------- HEADER DATE ----------
+  function setHeaderDate(){
+    var d = new Date();
+    var months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+    document.getElementById('todayLabel').textContent = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+  }
+
+  // ---------- NAVIGATION ----------
+  function setTab(tab){
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+    document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.remove('active'); });
+    if(tab==='list'){
+      document.getElementById('screen-list').classList.add('active');
+      document.querySelector('.nav-btn[data-tab="list"]').classList.add('active');
+      document.getElementById('greeting').textContent = 'Клиенты по недвижимости';
+      renderList();
+    } else if(tab==='new'){
+      openForm(null);
+      document.getElementById('screen-form').classList.add('active');
+      document.querySelector('.nav-btn[data-tab="new"]').classList.add('active');
+      document.getElementById('greeting').textContent = 'Новый клиент';
+    } else if(tab==='report'){
+      document.getElementById('screen-report').classList.add('active');
+      document.querySelector('.nav-btn[data-tab="report"]').classList.add('active');
+      document.getElementById('greeting').textContent = 'Отчёт по базе';
+      renderReport();
+    }
+  }
+
+  document.querySelectorAll('.nav-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){ setTab(btn.getAttribute('data-tab')); });
+  });
+
+  // ---------- LIST ----------
+  document.querySelectorAll('.filter-pill').forEach(function(p){
+    p.addEventListener('click', function(){
+      document.querySelectorAll('.filter-pill').forEach(function(x){ x.classList.remove('active'); });
+      p.classList.add('active');
+      currentFilter = p.getAttribute('data-filter');
+      renderList();
+    });
+  });
+  document.getElementById('searchInput').addEventListener('input', function(e){
+    currentSearch = e.target.value.trim().toLowerCase();
+    renderList();
+  });
+
+  function daysUntil(dateStr){
+    if(!dateStr) return null;
+    var today = new Date(); today.setHours(0,0,0,0);
+    var d = new Date(dateStr + 'T00:00:00');
+    return Math.round((d - today) / 86400000);
+  }
+
+  function fmtDate(dateStr){
+    if(!dateStr) return '';
+    var d = new Date(dateStr + 'T00:00:00');
+    var months = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+    return d.getDate() + ' ' + months[d.getMonth()];
+  }
+
+  function renderList(){
+    var wrap = document.getElementById('listScroll');
+    var filtered = clients.filter(function(c){
+      if(currentFilter !== 'all' && c.dealType !== currentFilter) return false;
+      if(currentSearch){
+        var hay = (c.name+' '+c.phone+' '+c.object).toLowerCase();
+        if(hay.indexOf(currentSearch) === -1) return false;
+      }
+      return true;
+    });
+
+    filtered.sort(function(a,b){
+      var da = a.nextContact ? new Date(a.nextContact) : new Date('2999-01-01');
+      var db = b.nextContact ? new Date(b.nextContact) : new Date('2999-01-01');
+      if(da - db !== 0) return da - db;
+      return (b.updatedAt||0) - (a.updatedAt||0);
+    });
+
+    if(filtered.length === 0){
+      wrap.innerHTML = '<div class="empty-state"><h3>Пока пусто</h3>Добавьте первого клиента через кнопку «Новый» внизу экрана.</div>';
+      return;
+    }
+
+    wrap.innerHTML = filtered.map(function(c){
+      var cls = c.dealType === 'Покупка' ? 'buy' : (c.dealType === 'Продажа' ? 'sell' : 'aware');
+      var du = daysUntil(c.nextContact);
+      var nextHtml = '';
+      if(c.nextContact){
+        var ncClass = du <= 0 ? 'due' : (du <= 3 ? 'upcoming' : '');
+        var label = du < 0 ? 'просрочено' : (du === 0 ? 'сегодня' : fmtDate(c.nextContact));
+        nextHtml = '<span class="next-contact ' + ncClass + '">' + label + '</span>';
+      }
+      return '' +
+        '<div class="client-row ' + cls + '" data-id="' + c.id + '">' +
+          '<div class="row-top">' +
+            '<span class="name">' + escapeHtml(c.name || 'Без имени') + '</span>' +
+            '<span class="deal-tag">' + c.dealType + '</span>' +
+          '</div>' +
+          '<div class="meta">' +
+            '<b>' + c.segment + '</b>' + (c.budget ? ' · ' + escapeHtml(c.budget) : '') +
+            (c.object ? '<br>' + escapeHtml(c.object) : '') +
+          '</div>' +
+          '<div class="row-bottom">' +
+            '<span class="status-chip">' + c.status + '</span>' +
+            nextHtml +
+          '</div>' +
+        '</div>';
+    }).join('');
+
+    wrap.querySelectorAll('.client-row').forEach(function(row){
+      row.addEventListener('click', function(){
+        openForm(row.getAttribute('data-id'));
+        setTab('form-shown'); // handled below
+        showFormScreen();
+      });
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"]/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+    });
+  }
+
+  function showFormScreen(){
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+    document.getElementById('screen-form').classList.add('active');
+  }
+
+  // ---------- FORM ----------
+  var dealTypeValue = 'Покупка';
+  var segmentValue = 'Первичка';
+
+  document.querySelectorAll('#f-dealType .toggle-opt').forEach(function(opt){
+    opt.addEventListener('click', function(){
+      dealTypeValue = opt.getAttribute('data-value');
+      document.querySelectorAll('#f-dealType .toggle-opt').forEach(function(o){ o.classList.remove('selected'); });
+      opt.classList.add('selected');
+    });
+  });
+  document.querySelectorAll('#f-segment .toggle-opt').forEach(function(opt){
+    opt.addEventListener('click', function(){
+      segmentValue = opt.getAttribute('data-value');
+      document.querySelectorAll('#f-segment .toggle-opt').forEach(function(o){ o.classList.remove('selected'); });
+      opt.classList.add('selected');
+    });
+  });
+
+  function openForm(id){
+    editingId = id;
+    var deleteBtn = document.getElementById('deleteBtn');
+    if(id){
+      var c = clients.find(function(x){ return x.id === id; });
+      document.getElementById('formTitle').textContent = 'Карточка клиента';
+      document.getElementById('f-name').value = c.name || '';
+      document.getElementById('f-phone').value = c.phone || '';
+      document.getElementById('f-budget').value = c.budget || '';
+      document.getElementById('f-object').value = c.object || '';
+      document.getElementById('f-status').value = c.status || 'Новый';
+      document.getElementById('f-next').value = c.nextContact || '';
+      document.getElementById('f-notes').value = c.notes || '';
+      dealTypeValue = c.dealType || 'Покупка';
+      segmentValue = c.segment || 'Первичка';
+      deleteBtn.style.visibility = 'visible';
+    } else {
+      document.getElementById('formTitle').textContent = 'Новый клиент';
+      document.getElementById('f-name').value = '';
+      document.getElementById('f-phone').value = '';
+      document.getElementById('f-budget').value = '';
+      document.getElementById('f-object').value = '';
+      document.getElementById('f-status').value = 'Новый';
+      document.getElementById('f-next').value = '';
+      document.getElementById('f-notes').value = '';
+      dealTypeValue = 'Покупка';
+      segmentValue = 'Первичка';
+      deleteBtn.style.visibility = 'hidden';
+    }
+    document.querySelectorAll('#f-dealType .toggle-opt').forEach(function(o){
+      o.classList.toggle('selected', o.getAttribute('data-value') === dealTypeValue);
+    });
+    document.querySelectorAll('#f-segment .toggle-opt').forEach(function(o){
+      o.classList.toggle('selected', o.getAttribute('data-value') === segmentValue);
+    });
+  }
+
+  document.getElementById('cancelBtn').addEventListener('click', function(){ setTab('list'); });
+
+  document.getElementById('saveBtn').addEventListener('click', function(){
+    var name = document.getElementById('f-name').value.trim();
+    if(!name){ showToast('Укажите имя клиента'); return; }
+    var now = Date.now();
+    var data = {
+      id: editingId || ('c' + now + Math.random().toString(36).slice(2,7)),
+      name: name,
+      phone: document.getElementById('f-phone').value.trim(),
+      dealType: dealTypeValue,
+      segment: segmentValue,
+      budget: document.getElementById('f-budget').value.trim(),
+      object: document.getElementById('f-object').value.trim(),
+      status: document.getElementById('f-status').value,
+      nextContact: document.getElementById('f-next').value,
+      notes: document.getElementById('f-notes').value.trim(),
+      createdAt: editingId ? (clients.find(function(x){return x.id===editingId;}).createdAt || now) : now,
+      updatedAt: now
+    };
+    if(editingId){
+      var idx = clients.findIndex(function(x){ return x.id === editingId; });
+      clients[idx] = data;
+    } else {
+      clients.push(data);
+    }
+    saveClients().then(function(ok){
+      if(ok) showToast('Сохранено');
+      setTab('list');
+    });
+  });
+
+  document.getElementById('deleteBtn').addEventListener('click', function(){
+    if(!editingId) return;
+    if(!confirm('Удалить эту карточку клиента?')) return;
+    clients = clients.filter(function(x){ return x.id !== editingId; });
+    saveClients().then(function(ok){
+      if(ok) showToast('Удалено');
+      setTab('list');
+    });
+  });
+
+  // ---------- REPORT ----------
+  function renderReport(){
+    var wrap = document.getElementById('reportScroll');
+    var total = clients.length;
+    var byDeal = { 'Покупка':0, 'Продажа':0, 'На будущее':0 };
+    var bySegment = { 'Первичка':0, 'Вторичка':0, 'Не определено':0 };
+    var byStatus = {};
+    STATUS_OPTIONS.forEach(function(s){ byStatus[s] = 0; });
+
+    clients.forEach(function(c){
+      if(byDeal[c.dealType] !== undefined) byDeal[c.dealType]++;
+      if(bySegment[c.segment] !== undefined) bySegment[c.segment]++;
+      if(byStatus[c.status] !== undefined) byStatus[c.status]++;
+    });
+
+    var due = clients.filter(function(c){
+      return c.nextContact && daysUntil(c.nextContact) <= 0;
+    }).sort(function(a,b){ return new Date(a.nextContact) - new Date(b.nextContact); });
+
+    var html = '';
+
+    html += '<div class="stat-block"><h3>Всего в базе: ' + total + '</h3>' +
+      '<div class="stat-line"><span>Покупка</span><span>' + byDeal['Покупка'] + '</span></div>' +
+      '<div class="stat-line"><span>Продажа</span><span>' + byDeal['Продажа'] + '</span></div>' +
+      '<div class="stat-line"><span>На будущее (просто в курсе)</span><span>' + byDeal['На будущее'] + '</span></div>' +
+      '<div class="stat-line"><span>Первичка</span><span>' + bySegment['Первичка'] + '</span></div>' +
+      '<div class="stat-line"><span>Вторичка</span><span>' + bySegment['Вторичка'] + '</span></div>' +
+      '</div>';
+
+    html += '<div class="stat-block"><h3>По статусам</h3>' +
+      STATUS_OPTIONS.map(function(s){
+        return '<div class="stat-line"><span>' + s + '</span><span>' + byStatus[s] + '</span></div>';
+      }).join('') +
+      '</div>';
+
+    html += '<div class="stat-block wide-block"><h3>Нужно связаться (' + due.length + ')</h3>';
+    if(due.length === 0){
+      html += '<div class="due-item">Просроченных и сегодняшних контактов нет.</div>';
+    } else {
+      html += due.map(function(c){
+        var du = daysUntil(c.nextContact);
+        var label = du === 0 ? 'сегодня' : (Math.abs(du) + ' дн. назад');
+        return '<div class="due-item"><span class="name">' + escapeHtml(c.name) + '</span> — ' + c.dealType.toLowerCase() + ', ' + c.segment.toLowerCase() +
+          '<br><span class="when">' + label + '</span></div>';
+      }).join('');
+    }
+    html += '</div>';
+
+    wrap.innerHTML = html;
+  }
+
+  // ---------- EXPORT ----------
+  function csvEscape(v){
+    var s = (v === undefined || v === null) ? '' : String(v);
+    s = s.replace(/"/g, '""');
+    return '"' + s + '"';
+  }
+
+  function exportCSV(){
+    if(clients.length === 0){ showToast('База пуста — нечего выгружать'); return; }
+    var header = ['Имя','Телефон','Тип','Сегмент','Бюджет','Объект/район','Статус','Следующий контакт','Заметки','Создан','Обновлён'];
+    var rows = [header];
+    clients.forEach(function(c){
+      rows.push([
+        c.name || '',
+        c.phone || '',
+        c.dealType || '',
+        c.segment || '',
+        c.budget || '',
+        c.object || '',
+        c.status || '',
+        c.nextContact || '',
+        c.notes || '',
+        c.createdAt ? new Date(c.createdAt).toLocaleDateString('ru-RU') : '',
+        c.updatedAt ? new Date(c.updatedAt).toLocaleDateString('ru-RU') : ''
+      ]);
+    });
+    var csv = rows.map(function(r){ return r.map(csvEscape).join(';'); }).join('\r\n');
+    var blob = new Blob(['\ufeff' + csv], { type:'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    var d = new Date();
+    var stamp = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    a.href = url;
+    a.download = 'клиенты_' + stamp + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+    showToast('Отчёт скачан');
+  }
+
+  document.getElementById('exportBtn').addEventListener('click', exportCSV);
+
+  // ---------- ПЕРЕКЛЮЧАТЕЛЬ ВЕРСИИ (ТЕЛЕФОН / КОМП) ----------
+  function applyMode(mode){
+    document.body.classList.toggle('desktop-layout', mode === 'desktop');
+    document.querySelectorAll('.mode-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-mode') === mode);
+    });
+  }
+
+  function loadMode(){
+    var fallback = window.innerWidth >= 880 ? 'desktop' : 'phone';
+    if(hasCloudStorage){
+      window.storage.get('uiMode', false).then(function(res){
+        applyMode(res && res.value ? res.value : fallback);
+      }).catch(function(){
+        applyMode(fallback);
+      });
+    } else {
+      var saved = null;
+      try{ saved = localStorage.getItem('reestr_ui_mode'); }catch(e){}
+      applyMode(saved || fallback);
+    }
+  }
+
+  document.querySelectorAll('.mode-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var mode = btn.getAttribute('data-mode');
+      applyMode(mode);
+      if(hasCloudStorage){
+        window.storage.set('uiMode', mode, false).catch(function(){});
+      } else {
+        try{ localStorage.setItem('reestr_ui_mode', mode); }catch(e){}
+      }
+    });
+  });
+
+  // ---------- INIT ----------
+  setHeaderDate();
+  loadMode();
+  loadClients();
+})();
+</script>
+</body>
+</html>

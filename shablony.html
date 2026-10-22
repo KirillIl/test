@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>База шаблонов ответов – Агентская поддержка</title>
+    <style>
+        :root {
+            --bg: #0b0f19;
+            --surface: rgba(20, 25, 40, 0.8);
+            --surface-border: rgba(255, 255, 255, 0.08);
+            --primary: #6c5ce7;
+            --primary-glow: rgba(108, 92, 231, 0.4);
+            --accent: #00cec9;
+            --text: #e0e0e0;
+            --text-secondary: #a0a0b0;
+            --danger: #e17055;
+            --radius: 16px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(circle at 30% 10%, #1a1f35 0%, #0b0f19 80%);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        /* Основной контейнер — стеклянная карта */
+        .dashboard {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--surface-border);
+            border-radius: 32px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        /* Заголовок */
+        .header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .header h1 {
+            font-weight: 600;
+            font-size: 1.8rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff 0%, #b0b0d0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header .badge {
+            background: rgba(108, 92, 231, 0.2);
+            border: 1px solid rgba(108, 92, 231, 0.3);
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #b9adff;
+            letter-spacing: 0.3px;
+        }
+
+        /* Выбор региона */
+        .region-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .region-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            padding: 10px 22px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: relative;
+        }
+        .region-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+        .region-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 8px 20px var(--primary-glow);
+            font-weight: 600;
+            transform: scale(1.03);
+        }
+
+        /* Поиск */
+        .search-box {
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            padding: 14px 20px 14px 50px;
+            font-size: 0.95rem;
+            color: #fff;
+            outline: none;
+            backdrop-filter: blur(10px);
+            transition: var(--transition);
+        }
+        .search-box input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.3);
+        }
+        .search-box .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7a7a90;
+            font-size: 1.2rem;
+            pointer-events: none;
+        }
+
+        /* Переключатель линий */
+        .line-tabs {
+            display: flex;
+            gap: 0;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 50px;
+            padding: 4px;
+            width: fit-content;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .line-tab {
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-secondary);
+            background: transparent;
+            border: none;
+            white-space: nowrap;
+        }
+        .line-tab.active {
+            background: var(--accent);
+            color: #0b0f19;
+            box-shadow: 0 6px 14px rgba(0, 206, 201, 0.4);
+        }
+
+        /* Аккордеон с шаблонами */
+        .templates-area {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .template-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: var(--transition);
+            backdrop-filter: blur(8px);
+        }
+        .template-item:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .template-question {
+            padding: 18px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 1rem;
+            letter-spacing: 0.2px;
+            user-select: none;
+        }
+        .template-question::after {
+            content: '▾';
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+            color: #7a7a90;
+        }
+        .template-item.open .template-question::after {
+            transform: rotate(180deg);
+            color: var(--accent);
+        }
+        .template-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.3s ease;
+            background: rgba(0, 0, 0, 0.2);
+            border-top: 0px solid rgba(255, 255, 255, 0.05);
+            color: #c0c0d0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            padding: 0 24px;
+        }
+        .template-item.open .template-answer {
+            max-height: 500px; /* достаточно для длинных текстов */
+            padding: 18px 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #6b6b80;
+            font-style: italic;
+        }
+
+        @media (max-width: 600px) {
+            .dashboard {
+                padding: 20px;
+                gap: 20px;
+            }
+            .region-btn {
+                padding: 8px 16px;
+                font-size: 0.8rem;
+            }
+            .line-tab {
+                padding: 10px 18px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>📋 Шаблоны ответов</h1>
+            <span class="badge">Консультационная база</span>
+        </div>
+
+        <!-- Выбор региона -->
+        <div class="region-selector" id="regionSelector">
+            <button class="region-btn active" data-region="msk">Москва</button>
+            <button class="region-btn" data-region="spb">Санкт-Петербург</button>
+            <button class="region-btn" data-region="kzn">Казань</button>
+            <button class="region-btn" data-region="nsk">Новосибирск</button>
+            <button class="region-btn" data-region="krd">Краснодар</button>
+        </div>
+
+        <!-- Поиск -->
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Быстрый поиск по шаблону...">
+        </div>
+
+        <!-- Переключатель линий -->
+        <div class="line-tabs" id="lineTabs">
+            <button class="line-tab active" data-line="1">🔹 1-я линия (до сделки)</button>
+            <button class="line-tab" data-line="2">🔸 2-я линия (сделка → комиссия)</button>
+        </div>
+
+        <!-- Контейнер для шаблонов -->
+        <div class="templates-area" id="templatesContainer">
+            <!-- динамически рендерится JS -->
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ----- БАЗА ШАБЛОНОВ -----
+            const data = {
+                msk: {
+                    name: 'Москва',
+                    line1: [
+                        { q: 'Как зафиксировать объект в системе?', a: '1. Авторизуйтесь в CRM. 2. Раздел "Новые объекты" → "Добавить". 3. Заполните карточку: адрес, метраж, тип помещения. 4. Нажмите "Зафиксировать". После этого объект уходит на модерацию (1-2 часа).' },
+                        { q: 'Какие документы нужны для начала работы с покупателем?', a: 'Паспорт, ИНН (при ипотеке), согласие на обработку данных. Если покупатель юрлицо — карточка предприятия и доверенность.' },
+                        { q: 'Что делать, если клиент не может найти подходящий вариант?', a: 'Расширьте параметры поиска в фильтре, предложите смежные районы. При необходимости передайте заявку в отдел подбора.' }
+                    ],
+                    line2: [
+                        { q: 'Когда я получу комиссию после сделки?', a: 'Выплата производится в течение 10 рабочих дней после полного расчёта покупателя и подписания акта приёма-передачи. Деньги приходят на карту, указанную в договоре.' },
+                        { q: 'Сделка зарегистрирована, но статус не обновлён', a: 'Проверьте, все ли документы загружены в раздел "Сделка". Если акт и платёжки есть, обратитесь в поддержку второй линии через тикет.' }
+                    ]
+                },
+                spb: {
+                    name: 'Санкт-Петербург',
+                    line1: [
+                        { q: 'Особенности фиксации в СПб', a: 'Для объектов в историческом центре требуется дополнительное фото фасада и охранное обязательство (если памятник). Без этого модерация не пройдёт.' },
+                        { q: 'Как быстро получить одобрение ипотеки?', a: 'Партнёрские банки: Сбер, ВТБ. Отправьте заявку через ЛК агента, ответ приходит от 30 минут до 2 часов.' }
+                    ],
+                    line2: [
+                        { q: 'Сроки выплаты по СПб', a: 'Стандартный регламент — 7 рабочих дней. Но если сделка с эскроу, то после раскрытия счёта.' },
+                        { q: 'Куда загрузить акт приёма-передачи?', a: 'В карточку сделки, вкладка "Документы". Обязательно pdf с подписями.' }
+                    ]
+                },
+                kzn: {
+                    name: 'Казань',
+                    line1: [
+                        { q: 'Региональные особенности по Татарстану', a: 'Для объектов в Казани обязательно указывать кадастровый номер и район (по новому делению). Без этого карточка не пройдёт валидацию.' },
+                        { q: 'Как зарегистрировать договор в Росреестре?', a: 'Через МФЦ или онлайн. Инструкция в базе знаний: ID 4521.' }
+                    ],
+                    line2: [
+                        { q: 'Комиссия при ипотеке с господдержкой', a: 'Размер комиссии фиксированный, согласно тарифам банка. Выплата после подтверждения субсидии.' }
+                    ]
+                },
+                nsk: {
+                    name: 'Новосибирск',
+                    line1: [
+                        { q: 'Сложности с холодными объектами', a: 'Если объект без отопления, обязательно предупредить покупателя и сделать отметку в карточке.' },
+                        { q: 'Как провести показ в удалённом районе?', a: 'Согласуйте с руководителем, возможно использование видеопоказа.' }
+                    ],
+                    line2: [
+                        { q: 'Выплата при ДДУ', a: 'По договору долевого участия комиссия после регистрации договора в Росреестре (5-7 дней).' }
+                    ]
+                },
+                krd: {
+                    name: 'Краснодар',
+                    line1: [
+                        { q: 'Частный сектор и самозахват', a: 'Проверьте межевание, иначе сделка может быть оспорена. Обязателен акт согласования границ.' },
+                        { q: 'Можно ли работать без риэлтора?', a: 'Да, если у вас оформлен статус самозанятого или ИП, но комиссия выплачивается иначе.' }
+                    ],
+                    line2: [
+                        { q: 'Куда отправлять закрывающие документы?', a: 'На почту docs@agency.ru, тема: "Документы по сделке №__".' }
+                    ]
+                }
+            };
+
+            // ---- ЭЛЕМЕНТЫ ----
+            const regionBtns = document.querySelectorAll('.region-btn');
+            const lineBtns = document.querySelectorAll('.line-tab');
+            const searchInput = document.getElementById('searchInput');
+            const container = document.getElementById('templatesContainer');
+
+            // состояние
+            let currentRegion = 'msk';
+            let currentLine = '1';
+            let searchQuery = '';
+
+            // вспомогательная функция фильтрации
+            function filterTemplates(items, query) {
+                if (!query.trim()) return items;
+                const q = query.toLowerCase();
+                return items.filter(item => 
+                    item.q.toLowerCase().includes(q) || 
+                    item.a.toLowerCase().includes(q)
+                );
+            }
+
+            // рендеринг списка вопросов-ответов
+            function render() {
+                const regionData = data[currentRegion];
+                const lineKey = 'line' + currentLine;
+                const templates = regionData[lineKey] || [];
+                const filtered = filterTemplates(templates, searchQuery);
+
+                container.innerHTML = '';
+
+                if (filtered.length === 0) {
+                    container.innerHTML = '<div class="no-results">😕 По вашему запросу ничего не найдено</div>';
+                    return;
+                }
+
+                filtered.forEach((item, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'template-item';
+                    div.innerHTML = `
+                        <div class="template-question">${item.q}</div>
+                        <div class="template-answer">${item.a.replace(/\n/g, '<br>')}</div>
+                    `;
+                    // обработчик раскрытия
+                    const questionEl = div.querySelector('.template-question');
+                    questionEl.addEventListener('click', () => {
+                        // закрыть остальные (опционально, если нужен режим аккордеона)
+                        const allItems = container.querySelectorAll('.template-item');
+                        allItems.forEach(el => {
+                            if (el !== div) el.classList.remove('open');
+                        });
+                        div.classList.toggle('open');
+                    });
+                    container.appendChild(div);
+                });
+            }
+
+            // обработчики выбора региона
+            regionBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    regionBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentRegion = this.dataset.region;
+                    render();
+                });
+            });
+
+            // обработчики переключения линии
+            lineBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    lineBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentLine = this.dataset.line;
+                    render();
+                });
+            });
+
+            // поиск с задержкой
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    searchQuery = this.value;
+                    render();
+                }, 300);
+            });
+
+            // начальная отрисовка
+            render();
+        })();
+    </script>
+</body>
+</html>
